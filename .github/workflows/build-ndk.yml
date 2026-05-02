@@ -25,6 +25,8 @@ on:
 env:
   module_id: mpex
   qmodName: MultiplayerExtensions
+  version: 0.1.0
+  qmodVersion: 0.1.0
 
 jobs:
   build:
