@@ -29,106 +29,93 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-
+    
     steps:
-      - uses: FranzDiebold/github-env-vars-action@v2
-      - uses: actions/checkout@v2
-        name: Checkout
-        with:
-          submodules: true
-          lfs: true
+    - uses: actions/checkout@v4
+      name: Checkout
+      with:
+        submodules: true
+        lfs: true
+        
+    - name: Get Version
+      shell: pwsh
+      run: |
+        $branchParts = '${{ github.ref_name }}'.Split('/'); $branchMain = $branchParts[0]; if ($branchParts[0] -match "^\d+$") { $branchMain = 'pr'; $branchSub = "$($branchParts[0])." } elseif ($branchParts.Length -eq 2) { $branchSub = "$($branchParts[1].Replace('.', '-'))." }; echo "version=$((Get-Content ./qpm.shared.json -Raw | ConvertFrom-Json).config.info.version.Replace('+', '-').Split('-')[0])-$($branchMain).${{ github.run_number }}+$($branchSub)ra${{ github.run_attempt }}.$($env:GITHUB_SHA.Substring(0, 7))" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $branchParts = '${{ github.ref_name }}'.Split('/'); $branchMain = $branchParts[0]; if ($branchParts[0] -match "^\d+$") { $branchMain = 'pr'; $branchSub = "$($branchParts[0])." } elseif ($branchParts.Length -eq 2) { $branchSub = "$($branchParts[1].Replace('.', '-'))." }; echo "qmodversion=$((Get-Content ./qpm.shared.json -Raw | ConvertFrom-Json).config.info.version.Replace('+', '-').Split('-')[0])+$($branchMain).$($branchSub)r${{ github.run_number }}a${{ github.run_attempt }}.$($env:GITHUB_SHA.Substring(0, 7))" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - uses: seanmiddleditch/gha-setup-ninja@v3
+    - name: Get BSVersion
+      shell: pwsh
+      run: |
+        echo "BSVersion=$((Get-Content ./mod.template.json -Raw | ConvertFrom-Json).packageVersion)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Create ndkpath.txt
-        run: |
-          echo "$ANDROID_NDK_LATEST_HOME" > ${GITHUB_WORKSPACE}/ndkpath.txt
-          cat ${GITHUB_WORKSPACE}/ndkpath.txt
+    - uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: Get QPM
-        if: steps.cache-qpm.outputs.cache-hit != 'true'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: cargo-build.yml
-          name: linux-qpm
-          path: QPM
-          repo: QuestPackageManager/QPM.CLI
+    - name: Get QPM
+      uses: Fernthedev/qpm-action@v1
+      with:
+        resolve_ndk: true
+        #required
+        workflow_token: ${{secrets.GITHUB_TOKEN}}
+        restore: true # will run restore on download
+        cache: true #will cache dependencies
+        version: '${{ env.version }}'
+        #qpm_qmod: '${{ env.qmodName }}_${{ env.qmodversion }}.qmod'
+        
+    - name: QPM Collapse
+      run: |
+        qpm collapse
+        
+    - name: Check dependency Folders
+      run: |
+        echo "Checking extern includes"
+        ls -lh ${GITHUB_WORKSPACE}/extern/includes
+        echo ""
+        echo "Checking libs"
+        ls -lh ${GITHUB_WORKSPACE}/extern/libs
+        echo ""
+        echo "Checking QPM/cache Folder"
+        ls -lh $HOME/.local/share/QPM-RS/cache
+        echo ""
 
-      - name: Put QPM on path
-        run: |
-          chmod +x ./QPM/qpm
-          echo "${GITHUB_WORKSPACE}/QPM" >> $GITHUB_PATH
+    # - name: Build
+    #   run: |
+    #     cd ${GITHUB_WORKSPACE}
+    #     pwsh -Command ./build.ps1 -actions
 
-      - name: QPM Collapse
-        run: |
-          qpm collapse
+    - name: Build & Package QMOD
+      shell: pwsh
+      run: |
+        cd ${{ github.workspace }}
+        qpm package edit --version ${{ env.qmodversion }}
+        qpm qmod zip -i ./build/ -i ./extern/libs/ ${{ env.qmodName }}_${{ env.qmodversion }}.qmod
 
-      - name: QPM Dependencies Cache
-        id: cache-qpm-deps
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-qpm-deps
-        with:
-          path: /home/runner/.local/share/QPM-RS/cache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('qpm.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+    - name: Get Library Name
+      id: libname
+      run: |
+        cd ./build/
+        pattern="lib${module_id}*.so"
+        files=( $pattern )
+        echo "NAME=${files[0]}" >> $GITHUB_OUTPUT
 
-      - name: QPM Restore
-        run: |
-          qpm restore
+    - name: Upload non-debug artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.libname.outputs.NAME }}
+        path: ./build/${{ steps.libname.outputs.NAME }}
+        if-no-files-found: error
 
-      - name: List Post Restore
-        run: |
-          echo includes:
-          ls -la ${GITHUB_WORKSPACE}/extern/includes
-          echo libs:
-          ls -la ${GITHUB_WORKSPACE}/extern/libs
-          echo cache:
-          ls -la $HOME/.local/share/QPM-RS/cache
 
-      - name: Build & Create Qmod
-        run: |
-          cd ${GITHUB_WORKSPACE}
-          qpm s qmod
+    - name: Upload debug artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug_${{ steps.libname.outputs.NAME }}
+        path: ./build/debug/${{ steps.libname.outputs.NAME }}
+        if-no-files-found: error
 
-      - name: Get Library Name
-        id: libname
-        run: |
-          cd ./build/
-          pattern="lib${module_id}*.so"
-          files=( $pattern )
-          echo ::set-output name=NAME::"${files[0]}"
 
-      - name: Upload release artifact
-        if: "${{ env.WEBHOOK != '' }}"
-        uses: tsickert/discord-webhook@v3.2.0
-        with:
-          webhook-url: ${{ env.WEBHOOK }}
-          content: "${{ env.CI_SHA_SHORT }} - `${{ github.event.head_commit.message }}`"
-          username: "${{ github.repository }}"
-          avatar-url: "http://github.com/${{ env.CI_ACTOR }}.png"
-          filename: ./build/${{ steps.libname.outputs.NAME }}
-
-      - name: Upload debug artifact
-        if: "${{ env.WEBHOOK != '' }}"
-        uses: tsickert/discord-webhook@v3.2.0
-        with:
-          webhook-url: ${{ env.WEBHOOK }}
-          username: "${{ github.repository }}"
-          avatar-url: "http://github.com/${{ env.CI_ACTOR }}.png"
-          filename: ./build/debug/${{ steps.libname.outputs.NAME }}
-
-      - name: Upload qmod
-        if: "${{ env.WEBHOOK != '' }}"
-        uses: tsickert/discord-webhook@v3.2.0
-        with:
-          webhook-url: ${{ env.WEBHOOK }}
-          username: "${{ github.repository }}"
-          avatar-url: "http://github.com/${{ env.CI_ACTOR }}.png"
-          filename: ./${{ env.qmodName }}.qmod
+    - name: Upload QMOD
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.qmodName }}-(UNZIP-for-QMOD).qmod
+        path: ./${{ env.qmodName }}_${{ env.qmodversion }}.qmod
+        if-no-files-found: warn
