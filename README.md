@@ -12,7 +12,7 @@ A Beat Saber mod which aims to improve the multiplayer experience.
 1. Download the `MultiplayerExtensionsq.qmod` file listed under `Assets` **[Here](https://github.com/EnderdracheLP/MultiplayerExtensions.Quest/releases)**.
    * Optionally, you can get a development build by downloading the file listed under `Artifacts`  **[Here](https://github.com/EnderdracheLP/MultiplayerExtensions.Quest/actions)** (pick the topmost successful build).
    * You must be logged into GitHub to download a development build.
-2. Upload the `MultiplayerExtensions.qmod` using your preferred modding tool, for example [MBF](mbf.bsquest.xyz).
+2. Upload the `MultiplayerExtensions.qmod` using your preferred modding tool, for example [MBF](https://mbf.bsquest.xyz).
 
 Enjoy!
 
