@@ -89,7 +89,10 @@ jobs:
       run: |
         cd ${{ github.workspace }}
         qpm package edit --version ${{ env.qmodversion }}
-        qpm qmod zip -i ./build/ -i ./extern/libs/ ${{ env.qmodName }}_${{ env.qmodversion }}.qmod
+        ./scripts/build.ps1 -clean
+        qpm qmod manifest
+        ./scripts/createqmod.ps1 "${{ env.qmodName }}_${{ env.qmodversion }}" -clean
+    #qpm qmod zip -i ./build/ -i ./extern/libs/ ${{ env.qmodName }}_${{ env.qmodversion }}.qmod
 
     - name: Get Library Name
       id: libname
