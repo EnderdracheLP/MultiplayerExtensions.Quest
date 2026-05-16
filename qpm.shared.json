@@ -56,7 +56,7 @@
       },
       {
         "id": "multiplayer-core",
-        "versionRange": "^1.6.5",
+        "versionRange": "^1.6.7",
         "additionalData": {}
       },
       {
@@ -263,17 +263,17 @@
     {
       "dependency": {
         "id": "multiplayer-core",
-        "versionRange": "=1.6.6",
+        "versionRange": "=1.6.7",
         "additionalData": {
-          "soLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.6/libMultiplayerCore.so",
-          "debugSoLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.6/debug_libMultiplayerCore.so",
+          "soLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.7/libMultiplayerCore.so",
+          "debugSoLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.7/debug_libMultiplayerCore.so",
           "overrideSoName": "libMultiplayerCore.so",
-          "modLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.6/MultiplayerCore_1.6.6.qmod",
-          "branchName": "version/1.6.6",
+          "modLink": "https://github.com/EnderdracheLP/MultiplayerCore.Quest/releases/download/1.6.7/MultiplayerCore_1.6.7.qmod",
+          "branchName": "version/1.6.7",
           "cmake": true
         }
       },
-      "version": "1.6.6"
+      "version": "1.6.7"
     },
     {
       "dependency": {
@@ -349,6 +349,21 @@
     },
     {
       "dependency": {
+        "id": "beatsaverplusplus",
+        "versionRange": "=0.2.3",
+        "additionalData": {
+          "soLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/libbeatsaverplusplus.so",
+          "debugSoLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/debug_libbeatsaverplusplus.so",
+          "overrideSoName": "libbeatsaverplusplus.so",
+          "modLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/BeatSaverPlusPlus.qmod",
+          "branchName": "version/v0_2_3",
+          "cmake": false
+        }
+      },
+      "version": "0.2.3"
+    },
+    {
+      "dependency": {
         "id": "fmt",
         "versionRange": "=11.0.2",
         "additionalData": {
@@ -365,21 +380,6 @@
         }
       },
       "version": "11.0.2"
-    },
-    {
-      "dependency": {
-        "id": "beatsaverplusplus",
-        "versionRange": "=0.2.3",
-        "additionalData": {
-          "soLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/libbeatsaverplusplus.so",
-          "debugSoLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/debug_libbeatsaverplusplus.so",
-          "overrideSoName": "libbeatsaverplusplus.so",
-          "modLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.3/BeatSaverPlusPlus.qmod",
-          "branchName": "version/v0_2_3",
-          "cmake": false
-        }
-      },
-      "version": "0.2.3"
     }
   ]
 }
